@@ -1,12 +1,6 @@
 {
-  "name": "gate.js",
-  "keywords": [
-    "postmessage",
-    "onstorage",
-    "onmessage",
-    "messagechannel",
-    "crossdomain"
-  ],
+  "name": "",
+  "keywords": [],
   "license": "MIT",
   "version": "0.1.2",
   "devDependencies": {
@@ -20,9 +14,6 @@
     "custom-event-target": "^0.0.7"
   },
   "dependencies": {},
-  "files": [
-    "dist/gate.html",
-    "dist/gate.js"
-  ],
-  "main": "dist/gate.js"
+  "files": [],
+  "main": ""
 }

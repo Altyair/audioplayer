@@ -1,0 +1,98 @@
+body {
+	margin: 0;
+	padding: 0;
+}
+.player {
+	width: 560px;
+	height: 115px;
+	position: relative;
+	background: #8f3fb0;
+}
+.player .name {
+	line-height: 40px;
+	background: #9c56b9;
+	color: #fff;
+	text-align: center;
+}
+.actions {
+	position: relative;
+	height: 75px;
+}
+.actions .pause, .play, .mute, .unmute, .prev, .next {
+	height: 42px;
+	width: 42px;
+	position: absolute;
+	bottom: 18px;
+	cursor: pointer;
+}
+.actions div.play {
+	left: 18px;
+	background: url("images/play_pause_bg.png") bottom center;
+}
+.actions div.pause {
+	background: url("images/play_pause_bg.png") top center;
+	left: 18px; 
+}
+.actions div.prev {
+	background: url("images/prev_bg.png") 0 0;
+	left: 70px; 
+}
+.actions div.next {
+	background: url("images/next_bg.png") 0 0;
+	left: 122px; 
+}
+.actions div.mute {
+	left: 174px;
+	background: url("images/volume_bg.png") bottom center;
+}
+.actions div.unmute {
+	left: 174px;
+	background: url("images/volume_bg.png") top center;
+}
+.timer {
+	color: #fff;
+	position: absolute;
+	left: 75px;
+	top: 12px;
+	display: block;
+}
+.actions .progress {
+	position: absolute;
+	bottom: 25px;
+	left: 240px;
+}
+.hide {
+	display: none;
+}
+.sliderPlaying, .sliderVolume {
+	height: 4px;
+	background: #cecece;
+	position: absolute;
+	left: 240px;
+	top: 35px;
+}
+.sliderVolume {
+	left: 400px;
+}	
+.slider {
+	height: 15px;
+	width: 15px;
+	position: relative;
+	left: 0;
+	top: -5px;
+	background: white;
+	cursor: pointer;
+}
+.timeInfo {
+	width: 40px;
+	position: absolute;
+	top: -20px;
+	text-align: center;
+	color: #fff;
+	font-size: 11px;
+	display: none;
+}
+
+.music-player {
+	margin: 50px 0 0 200px;
+}
