@@ -59,26 +59,26 @@ PlayerViewController.prototype = {
 		var element = this._element;
 		
 		// прокрутка проигрывания
-		var sliderPlaying = new Slider();
-		sliderPlaying.setMaxValue(130); // в px
-		sliderPlaying.setContainer(element.querySelector('.sliderPlaying'));
-		sliderPlaying.render();
-		
-		sliderPlaying.on('change', this._onProgressPlayingChange.bind(this));
-		sliderPlaying.on('hideTime', this._onHideTimePlayingChange.bind(this));
-		
-		this._sliderPlaying = sliderPlaying;
+		//var sliderPlaying = new Slider();
+		//sliderPlaying.setMaxValue(130); // в px
+		//sliderPlaying.setContainer(element.querySelector('.sliderPlaying'));
+		//sliderPlaying.render();
+		//
+		//sliderPlaying.on('change', this._onProgressPlayingChange.bind(this));
+		//sliderPlaying.on('hideTime', this._onHideTimePlayingChange.bind(this));
+		//
+		//this._sliderPlaying = sliderPlaying;
 		
 		// прокрутка громкости
-		var sliderVolume = new Slider();
-		sliderVolume.setMaxValue(130);
-		sliderVolume.setContainer(element.querySelector('.sliderVolume'));
-		sliderVolume.render();
-		
-		sliderVolume.on('change', this._onProgressVolumeChange.bind(this));
-		sliderVolume.on('hideTime', this._onHideTimeVolumeChange.bind(this));
-
-		this._sliderVolume = sliderVolume;
+		//var sliderVolume = new Slider();
+		//sliderVolume.setMaxValue(130);
+		//sliderVolume.setContainer(element.querySelector('.sliderVolume'));
+		//sliderVolume.render();
+		//
+		//sliderVolume.on('change', this._onProgressVolumeChange.bind(this));
+		//sliderVolume.on('hideTime', this._onHideTimeVolumeChange.bind(this));
+		//
+		//this._sliderVolume = sliderVolume;
 		
 		// название трека
 		this._nameField = element.querySelector('.name');
@@ -87,7 +87,7 @@ PlayerViewController.prototype = {
 		//this._progressVolume  = new Slider();
 		
 		// таймер
-		this._timer = element.querySelector('.timer');
+		//this._timer = element.querySelector('.timer');
 		// кнопка play у каждого интерфейса своя
 		this._buttonPlay = element.querySelector('.play');
 		// кнопка предидущий трек
