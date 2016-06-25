@@ -99,19 +99,8 @@ define(function () { 'use strict';
    Slider.Super = CustomEventTarget; //Super от Super/Parent Class
 
    Slider.prototype._template = [
-   	//'<div class="timeInfo"></div>',
    	'<div class="slider"></div>',
    ].join('');
-
-   //Slider.prototype.hideTime = function () {
-   //	this._timeInfo.style.display = 'none';
-   //};
-
-   //Slider.prototype.showTime = function (progressValue, value) {
-   //	this._timeInfo.innerHTML = value;
-   //	this._timeInfo.style.left = progressValue - 12 + 'px';  
-   //	this._timeInfo.style.display = 'block';
-   //};
 
    Slider.prototype._createDOMElement = function (obj) {
    	var wrapper = document.createElement('div');
