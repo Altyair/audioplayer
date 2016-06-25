@@ -99,6 +99,7 @@ define(function () { 'use strict';
    Slider.Super = CustomEventTarget; //Super от Super/Parent Class
 
    Slider.prototype._template = [
+   	//'<div class="timeInfo"></div>',
    	'<div class="slider"></div>',
    ].join('');
 
