@@ -66,27 +66,29 @@ define(function () { 'use strict';
       }
    };
 
+   function Template () {}
+   Template.prototype.template = function (str) {
+   	str = (typeof str === "string") ? str : str.innerHTML;
+   	var p = [];
+   	p.push('var p = [];p.push(\'' + str
+   		.replace(/[\r\t\n]/g, "")
+   		.split("<%").join("\t")
+   		.replace(/((^|%>)[^\t]*)'/g, "$1\r")
+   		.replace(/\t=(.*?)%>/g, "',$1,'")
+   		.split("\t").join("');")
+   		.split("%>").join("p.push('")
+   		.split("\r").join("\\'") + '\');return p.join(\'\');');
+   	return new Function('data', p);
+   }
+
    function Slider () {
-   	this._element = this._createDOMElement(template(this._template)());
+   	var template = new Template();
+   	this._element = this._createDOMElement(template.template(this._template)());
    	this._findElements(); // инициализация элементов
    	this._initializeEvents();
+
    	this.onMouseDown = false; // флаг о начале движения ползунка
    	CustomEventTarget.call(this); // наследуем свойства от CustomEventTarget
-   	
-   	// щаблонизатор 
-      	function template(str) {
-      		str = (typeof str === "string") ? str : str.innerHTML;
-      		var p = [];
-      		p.push('var p = [];p.push(\'' + str
-      			.replace(/[\r\t\n]/g, "")
-      			.split("<%").join("\t")
-      			.replace(/((^|%>)[^\t]*)'/g, "$1\r")
-      			.replace(/\t=(.*?)%>/g, "',$1,'")
-      			.split("\t").join("');")
-      			.split("%>").join("p.push('")
-      			.split("\r").join("\\'") + '\');return p.join(\'\');');
-      		return new Function('data', p);
-      	};
    }
 
    // просто созданим новый объект с прототипом от EventTarget
@@ -97,33 +99,23 @@ define(function () { 'use strict';
    Slider.Super = CustomEventTarget; //Super от Super/Parent Class
 
    Slider.prototype._template = [
-   	'<div class="timeInfo"></div>',
+   	//'<div class="timeInfo"></div>',
    	'<div class="slider"></div>',
    ].join('');
 
-   Slider.prototype.hideTime = function () {
-   	this._timeInfo.style.display = 'none';
-   };
+   //Slider.prototype.hideTime = function () {
+   //	this._timeInfo.style.display = 'none';
+   //};
 
-   Slider.prototype.showTime = function (progressValue, value) {
-   	this._timeInfo.innerHTML = value;
-   	this._timeInfo.style.left = progressValue - 12 + 'px';  
-   	this._timeInfo.style.display = 'block';
-   };
-
-   Slider.prototype.setContainer = function (container) {
-   	console.log(getComputedStyle(this._slider, '').width);  //  ???
-   	this._container = container;
-   	this._container.style.width = this._progressMaxValue + 15 + 'px';  // значение 15 - ширина слайдера. Не могу получить это значение.
-   };
-
-   Slider.prototype.getContainer = function () {
-   	return this._container;
-   };
+   //Slider.prototype.showTime = function (progressValue, value) {
+   //	this._timeInfo.innerHTML = value;
+   //	this._timeInfo.style.left = progressValue - 12 + 'px';  
+   //	this._timeInfo.style.display = 'block';
+   //};
 
    Slider.prototype._createDOMElement = function (obj) {
    	var wrapper = document.createElement('div');
-   	wrapper.className = 'wrapper';
+   	wrapper.className = 'slider-wrapper';
    	wrapper.innerHTML = obj;
    	return wrapper;
    };
@@ -131,75 +123,58 @@ define(function () { 'use strict';
    Slider.prototype._findElements = function () {
    	var element = this._element;
    	this._slider = element.querySelector('.slider');
-   	this._timeInfo = element.querySelector('.timeInfo');
+   	//this._timeInfo = element.querySelector('.timeInfo');
    };
 
-   // установка максимального значения 
-   Slider.prototype.setMaxValue = function (maxValue) {
-   	this._progressMaxValue = maxValue;
-   };
-
-   Slider.prototype.getMaxValue = function (maxValue) {
-   	return this._progressMaxValue;
-   };
-
-   Slider.prototype.setMinValue = function () {
-   	this._slider.style.left = '0px';
-   };
-
-   // установка шага
-   Slider.prototype.setStep = function (stepValue) {
-   	this._step = stepValue;
-   };
-
-   Slider.prototype.move = function (value) {
-   	this._slider.style.left = value + 'px';
-   };
-
-   Slider.prototype.render = function () {
-   	this._container.appendChild(this._element);
+   Slider.prototype.renderTo = function (container) {
+   	this._container = container;
+   	container.appendChild(this._element);
    };
 
    // инициализация событий
    Slider.prototype._initializeEvents = function () {
-   	var handlerOnMove = this._setValue.bind(this),
-   		me = this;
-   	
-   	this._slider.addEventListener('mousedown', function (e) {
-   		me.onMouseDown = true; // флаг, чтобы ф-я document.onmouseup отработала именно когда нажали на ползунок, а не в любое место
-   		document.addEventListener('mousemove', handlerOnMove);
-   	});
-   	
-   	document.addEventListener('mouseup', function() {
-   		if (me.onMouseDown) {
-   			me._fire('hideTime'); // скрываем время над ползунком
-   			me.onMouseDown = false;
-   			document.removeEventListener('mousemove', handlerOnMove);
-   		}
-   	});
+     var slider = this;
+     var coordinatesContainer;
+     var leftCoordinateContainer;
+     var widthSlider;
+     var widthContainer;
+     var centrPositionCursor;
+     var moveAt = function (e) {
+   	  if (e.pageX <= leftCoordinateContainer + centrPositionCursor) {
+   		var value = 0;
+   	  } else if(e.pageX >= leftCoordinateContainer + (widthContainer - centrPositionCursor)) {
+   		 value = widthContainer - widthSlider;
+   	  } else {
+   		 value = e.pageX - leftCoordinateContainer - centrPositionCursor;
+   	  }
+   	  slider._slider.style.left = value + 'px';
+   	  
+   	  //this._fire('change', {value: value, progressMax: this._progressMaxValue});
+     };
 
-   	this._slider.addEventListener('dragstart', function () {
-   		return false;
-   	});
-   };
-
-   Slider.prototype._setValue = function (e) {
-   	var coordsParent = this._getCoords(this._container),
-   		left = coordsParent.left,
-   		value = null;
-   		
-   	if (e.pageX <= left) {
-   		value = 0;
-   	} else if(e.pageX >= left + this._progressMaxValue) {
-   		value = this._progressMaxValue;
-   	} else {
-   		value = e.pageX - left;
+     this._slider.addEventListener('mousedown', function (e) {
+   	if(!coordinatesContainer) {
+   		coordinatesContainer = slider._getCoordinates(slider._container);
+   		leftCoordinateContainer = coordinatesContainer.left;
+   		widthSlider = slider._slider.offsetWidth;
+   		centrPositionCursor = widthSlider / 2;
+   		widthContainer = slider._container.offsetWidth;
    	}
    	
-   	this._fire('change', {value: value, progressMax: this._progressMaxValue});
+   	moveAt(e);
+   	document.addEventListener('mousemove', moveAt);
+     });
+    
+     document.addEventListener('mouseup', function() {
+   	  document.removeEventListener('mousemove', moveAt);
+     });
+    
+     this._slider.ondragstart = function() {
+   	return false;
+     };
    };
 
-   Slider.prototype._getCoords = function(elem) {
+   Slider.prototype._getCoordinates = function(elem) {
    	var box = elem.getBoundingClientRect(), // координаты объекта относительно документа
    		scrollTop = window.pageYOffset, // значение прокрутки
    		scrollLeft = window.pageXOffset, // значение прокрутки
@@ -211,25 +186,10 @@ define(function () { 'use strict';
 
    function PlayerViewController (player) {
    	this._player = player; // экземпляр плеера
-   	this._element = this._createDOMElement(template(this._template)()); // html разметка интерфеса
+   	var template = new Template();
+   	this._element = this._createDOMElement(template.template(this._template)());
    	this._findElements(); // инициализация элементов
-   	
    	this._initializeEvents(); // инициализация событий
-   	
-   	// щаблонизатор 
-   	function template(str) {
-   		str = (typeof str === "string") ? str : str.innerHTML;
-   		var p = [];
-   		p.push('var p = [];p.push(\'' + str
-   			.replace(/[\r\t\n]/g, "")
-   			.split("<%").join("\t")
-   			.replace(/((^|%>)[^\t]*)'/g, "$1\r")
-   			.replace(/\t=(.*?)%>/g, "',$1,'")
-   			.split("\t").join("');")
-   			.split("%>").join("p.push('")
-   			.split("\r").join("\\'") + '\');return p.join(\'\');');
-   		return new Function('data', p);
-   	};
    }
 
    PlayerViewController.prototype = {
@@ -240,10 +200,11 @@ define(function () { 'use strict';
    		'<div class="name"></div>',
    		'<div class="actions">',
    			'<div class="play"></div>',
+   			'<div class="stop"></div>',
    			'<div class="prev"></div>',
    			'<div class="next"></div>',
-   			'<div class="mute"></div>',
    			'<div class="sliderPlaying"></div>',
+   			'<div class="mute"></div>',
    			'<div class="sliderVolume"></div>',
    		'</div>',
    		'</div>'
@@ -269,25 +230,24 @@ define(function () { 'use strict';
    		
    		// прокрутка проигрывания
    		var sliderPlaying = new Slider();
-   		sliderPlaying.setMaxValue(130); // в px
-   		sliderPlaying.setContainer(element.querySelector('.sliderPlaying'));
-   		sliderPlaying.render();
-   		
-   		sliderPlaying.on('change', this._onProgressPlayingChange.bind(this));
-   		sliderPlaying.on('hideTime', this._onHideTimePlayingChange.bind(this));
-   		
-   		this._sliderPlaying = sliderPlaying;
+   		sliderPlaying.renderTo(element.querySelector('.sliderPlaying'));
+
+   		//
+   		//sliderPlaying.on('change', this._onProgressPlayingChange.bind(this));
+   		//sliderPlaying.on('hideTime', this._onHideTimePlayingChange.bind(this));
+   		//
+   		//this._sliderPlaying = sliderPlaying;
    		
    		// прокрутка громкости
-   		var sliderVolume = new Slider();
-   		sliderVolume.setMaxValue(130);
-   		sliderVolume.setContainer(element.querySelector('.sliderVolume'));
-   		sliderVolume.render();
-   		
-   		sliderVolume.on('change', this._onProgressVolumeChange.bind(this));
-   		sliderVolume.on('hideTime', this._onHideTimeVolumeChange.bind(this));
-
-   		this._sliderVolume = sliderVolume;
+   		//var sliderVolume = new Slider();
+   		//sliderVolume.setMaxValue(130);
+   		//sliderVolume.setContainer(element.querySelector('.sliderVolume'));
+   		//sliderVolume.render();
+   		//
+   		//sliderVolume.on('change', this._onProgressVolumeChange.bind(this));
+   		//sliderVolume.on('hideTime', this._onHideTimeVolumeChange.bind(this));
+   		//
+   		//this._sliderVolume = sliderVolume;
    		
    		// название трека
    		this._nameField = element.querySelector('.name');
@@ -296,7 +256,7 @@ define(function () { 'use strict';
    		//this._progressVolume  = new Slider();
    		
    		// таймер
-   		this._timer = element.querySelector('.timer');
+   		//this._timer = element.querySelector('.timer');
    		// кнопка play у каждого интерфейса своя
    		this._buttonPlay = element.querySelector('.play');
    		// кнопка предидущий трек
@@ -313,13 +273,13 @@ define(function () { 'use strict';
    		this._player.on('pause', this._pauseView.bind(this));
    		this._player.on('mute', this._muteView.bind(this));
    		this._player.on('unmute', this._unmuteView.bind(this));
-   		this._player.on('timer', this._timerView.bind(this));
-   		this._player.on('ended', this._endedView.bind(this));
-   		this._player.on('changeSource', this._sourceView.bind(this));
-   		this._player.on('progressCurrentTime', this._progressPlayingView.bind(this));
-   		this._player.on('progressVolume', this._progressVolumeView.bind(this));
-   		this._player.on('hideTimePlaying', this._hideTimePlayingView.bind(this));
-   		this._player.on('hideTimeVolume', this._hideTimeVolumeView.bind(this));
+   		//this._player.on('timer', this._timerView.bind(this));
+   		//this._player.on('ended', this._endedView.bind(this));
+   		//this._player.on('changeSource', this._sourceView.bind(this));
+   		//this._player.on('progressCurrentTime', this._progressPlayingView.bind(this));
+   		//this._player.on('progressVolume', this._progressVolumeView.bind(this));
+   		//this._player.on('hideTimePlaying', this._hideTimePlayingView.bind(this));
+   		//this._player.on('hideTimeVolume', this._hideTimeVolumeView.bind(this));
 
 
    		// вкл / выкл плеера

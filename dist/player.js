@@ -111,8 +111,8 @@ define(function () { 'use strict';
    	// достаточным для того, чтобы успешно начать воспроизведение ролика. Возникает после
    	// события loadeddata и перед событием canplaythrough.
    	this._audio.addEventListener('canplay', this._onCanPlay.bind(this));
-   	this._audio.addEventListener('timeupdate', this._onTimer.bind(this));
-   	this._audio.addEventListener('ended', this._onEnded.bind(this));
+   	//this._audio.addEventListener('timeupdate', this._onTimer.bind(this));
+   	//this._audio.addEventListener('ended', this._onEnded.bind(this));
    	
    	CustomEventTarget.call(this); // наследуем свойства от CustomEventTarget
    }

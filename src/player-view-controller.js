@@ -1,26 +1,12 @@
 import Slider from './slider';
+import Template from './template';
 
 function PlayerViewController (player) {
 	this._player = player; // экземпляр плеера
-	this._element = this._createDOMElement(template(this._template)()); // html разметка интерфеса
+	var template = new Template();
+	this._element = this._createDOMElement(template.template(this._template)());
 	this._findElements(); // инициализация элементов
-	
 	this._initializeEvents(); // инициализация событий
-	
-	// щаблонизатор 
-	function template(str) {
-		str = (typeof str === "string") ? str : str.innerHTML;
-		var p = [];
-		p.push('var p = [];p.push(\'' + str
-			.replace(/[\r\t\n]/g, "")
-			.split("<%").join("\t")
-			.replace(/((^|%>)[^\t]*)'/g, "$1\r")
-			.replace(/\t=(.*?)%>/g, "',$1,'")
-			.split("\t").join("');")
-			.split("%>").join("p.push('")
-			.split("\r").join("\\'") + '\');return p.join(\'\');');
-		return new Function('data', p);
-	};
 }
 
 PlayerViewController.prototype = {
@@ -31,10 +17,11 @@ PlayerViewController.prototype = {
 		'<div class="name"></div>',
 		'<div class="actions">',
 			'<div class="play"></div>',
+			'<div class="stop"></div>',
 			'<div class="prev"></div>',
 			'<div class="next"></div>',
-			'<div class="mute"></div>',
 			'<div class="sliderPlaying"></div>',
+			'<div class="mute"></div>',
 			'<div class="sliderVolume"></div>',
 		'</div>',
 		'</div>'
@@ -59,10 +46,9 @@ PlayerViewController.prototype = {
 		var element = this._element;
 		
 		// прокрутка проигрывания
-		//var sliderPlaying = new Slider();
-		//sliderPlaying.setMaxValue(130); // в px
-		//sliderPlaying.setContainer(element.querySelector('.sliderPlaying'));
-		//sliderPlaying.render();
+		var sliderPlaying = new Slider();
+		sliderPlaying.renderTo(element.querySelector('.sliderPlaying'));
+
 		//
 		//sliderPlaying.on('change', this._onProgressPlayingChange.bind(this));
 		//sliderPlaying.on('hideTime', this._onHideTimePlayingChange.bind(this));
@@ -104,13 +90,13 @@ PlayerViewController.prototype = {
 		this._player.on('pause', this._pauseView.bind(this));
 		this._player.on('mute', this._muteView.bind(this));
 		this._player.on('unmute', this._unmuteView.bind(this));
-		this._player.on('timer', this._timerView.bind(this));
-		this._player.on('ended', this._endedView.bind(this));
-		this._player.on('changeSource', this._sourceView.bind(this));
-		this._player.on('progressCurrentTime', this._progressPlayingView.bind(this));
-		this._player.on('progressVolume', this._progressVolumeView.bind(this));
-		this._player.on('hideTimePlaying', this._hideTimePlayingView.bind(this));
-		this._player.on('hideTimeVolume', this._hideTimeVolumeView.bind(this));
+		//this._player.on('timer', this._timerView.bind(this));
+		//this._player.on('ended', this._endedView.bind(this));
+		//this._player.on('changeSource', this._sourceView.bind(this));
+		//this._player.on('progressCurrentTime', this._progressPlayingView.bind(this));
+		//this._player.on('progressVolume', this._progressVolumeView.bind(this));
+		//this._player.on('hideTimePlaying', this._hideTimePlayingView.bind(this));
+		//this._player.on('hideTimeVolume', this._hideTimeVolumeView.bind(this));
 
 
 		// вкл / выкл плеера

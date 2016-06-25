@@ -9,7 +9,7 @@ body {
 	background: #8f3fb0;
 }
 .player .name {
-	line-height: 40px;
+	height: 40px;
 	background: #9c56b9;
 	color: #fff;
 	text-align: center;
@@ -18,7 +18,7 @@ body {
 	position: relative;
 	height: 75px;
 }
-.actions .pause, .play, .mute, .unmute, .prev, .next {
+.actions .pause, .play, .stop, .mute, .unmute, .prev, .next {
 	height: 42px;
 	width: 42px;
 	position: absolute;
@@ -26,27 +26,30 @@ body {
 	cursor: pointer;
 }
 .actions div.play {
-	left: 18px;
+	left: 10px;
 	background: url("images/play_pause_bg.png") bottom center;
+}
+.actions div.stop {
+	left: 55px;
+	background: url("images/stop_bg.png") bottom center;
 }
 .actions div.pause {
 	background: url("images/play_pause_bg.png") top center;
-	left: 18px; 
+	left: 10px; 
 }
 .actions div.prev {
 	background: url("images/prev_bg.png") 0 0;
-	left: 70px; 
+	left: 100px; 
 }
 .actions div.next {
 	background: url("images/next_bg.png") 0 0;
-	left: 122px; 
+	left: 145px; 
 }
-.actions div.mute {
-	left: 174px;
+.actions div.mute, .actions div.unmute {
+	left: 405px;
 	background: url("images/volume_bg.png") bottom center;
 }
 .actions div.unmute {
-	left: 174px;
 	background: url("images/volume_bg.png") top center;
 }
 .timer {
@@ -65,21 +68,23 @@ body {
 	display: none;
 }
 .sliderPlaying, .sliderVolume {
-	height: 4px;
-	background: #cecece;
+	height: 2px;
+	background: #fff;
 	position: absolute;
-	left: 240px;
+	left: 190px;
 	top: 35px;
+	width: 200px;
 }
 .sliderVolume {
-	left: 400px;
+	left: 450px;
+	width: 100px;
 }	
 .slider {
-	height: 15px;
-	width: 15px;
+	height: 16px;
+	width: 16px;
 	position: relative;
 	left: 0;
-	top: -5px;
+	top: -7px;
 	background: white;
 	cursor: pointer;
 }
