@@ -82,12 +82,10 @@ define(function () { 'use strict';
    }
 
    function Slider () {
+   	this.sliderActive = false;
    	var template = new Template();
    	this._element = this._createDOMElement(template.template(this._template)());
    	this._findElements(); // инициализация элементов
-   	this._initializeEvents();
-
-   	this.onMouseDown = false; // флаг о начале движения ползунка
    	CustomEventTarget.call(this); // наследуем свойства от CustomEventTarget
    }
 
@@ -99,7 +97,6 @@ define(function () { 'use strict';
    Slider.Super = CustomEventTarget; //Super от Super/Parent Class
 
    Slider.prototype._template = [
-   	//'<div class="timeInfo"></div>',
    	'<div class="slider"></div>',
    ].join('');
 
@@ -113,27 +110,37 @@ define(function () { 'use strict';
    Slider.prototype._findElements = function () {
    	var element = this._element;
    	this._slider = element.querySelector('.slider');
-   	//this._timeInfo = element.querySelector('.timeInfo');
    };
 
    Slider.prototype.renderTo = function (container) {
-   	this._container = container;
    	container.appendChild(this._element);
+   	this._sliderWrapper = container.querySelector('.slider-wrapper');
+   	this._initializeEvents();
+   };
+
+   Slider.prototype.getWidthSliderWrapper = function () {
+   	return this._sliderWrapper.offsetWidth;
+   };
+
+   // перемещение извне.
+   Slider.prototype.move = function (value) {
+   	this._slider.style.left = value + 'px';
    };
 
    // инициализация событий
    Slider.prototype._initializeEvents = function () {
      var slider = this;
-     var coordinatesContainer;
-     var leftCoordinateContainer;
-     var widthSlider;
-     var widthContainer;
-     var centrPositionCursor;
-     var moveAt = function (e) {
+     var coordinatesSliderWrapper = this._getCoordinates(this._sliderWrapper);
+     var leftCoordinateContainer = coordinatesSliderWrapper.left;
+     var widthSliderWrapper = this.getWidthSliderWrapper();
+     var widthSlider = this._slider.offsetWidth;
+     var centrPositionCursor = widthSlider / 2;
+
+     var moveSlider = function (e) {
    	  if (e.pageX <= leftCoordinateContainer + centrPositionCursor) {
    		var value = 0;
-   	  } else if(e.pageX >= leftCoordinateContainer + (widthContainer - centrPositionCursor)) {
-   		 value = widthContainer - widthSlider;
+   	  } else if(e.pageX >= leftCoordinateContainer + (widthSliderWrapper - centrPositionCursor)) {
+   		 value = widthSliderWrapper - widthSlider;
    	  } else {
    		 value = e.pageX - leftCoordinateContainer - centrPositionCursor;
    	  }
@@ -143,20 +150,16 @@ define(function () { 'use strict';
      };
 
      this._slider.addEventListener('mousedown', function (e) {
-   	if(!coordinatesContainer) {
-   		coordinatesContainer = slider._getCoordinates(slider._container);
-   		leftCoordinateContainer = coordinatesContainer.left;
-   		widthSlider = slider._slider.offsetWidth;
-   		centrPositionCursor = widthSlider / 2;
-   		widthContainer = slider._container.offsetWidth;
-   	}
+   	slider.sliderActive = true;
    	
-   	moveAt(e);
-   	document.addEventListener('mousemove', moveAt);
+   	moveSlider(e);
+   	document.addEventListener('mousemove', moveSlider);
      });
     
      document.addEventListener('mouseup', function() {
-   	  document.removeEventListener('mousemove', moveAt);
+   	  slider._slider.sliderActive = false;
+
+   	  document.removeEventListener('mousemove', moveSlider);
      });
     
      this._slider.ondragstart = function() {
@@ -207,8 +210,8 @@ define(function () { 'use strict';
    	},
    	
    	_formatTime: function (time) {
-   		var minutes = Math.floor(time / 60) % 60,
-   		seconds = Math.floor(time % 60);
+   		var minutes = Math.floor(time / 60) % 60;
+   		var seconds = Math.floor(time % 60);
    	   
    		return  (minutes < 10 ? '0' + minutes : minutes) + ':' +
    			(seconds < 10 ? '0' + seconds : seconds);
@@ -218,9 +221,9 @@ define(function () { 'use strict';
    	_findElements: function () {
    		var element = this._element;
    		
-   		// прокрутка проигрывания
-   		var sliderPlaying = new Slider();
-   		sliderPlaying.renderTo(element.querySelector('.sliderPlaying'));
+   		//// прокрутка проигрывания
+   		//this._sliderPlaying = new Slider();
+   		//this._sliderPlaying.renderTo(element.querySelector('.sliderPlaying'));
 
    		//
    		//sliderPlaying.on('change', this._onProgressPlayingChange.bind(this));
@@ -246,9 +249,10 @@ define(function () { 'use strict';
    		//this._progressVolume  = new Slider();
    		
    		// таймер
-   		//this._timer = element.querySelector('.timer');
+   		this._timer = element.querySelector('.timer');
    		// кнопка play у каждого интерфейса своя
    		this._buttonPlay = element.querySelector('.play');
+   		this._buttonStop = element.querySelector('.stop');
    		// кнопка предидущий трек
    		this._buttonPrev = element.querySelector('.prev');
    		// кнопка следующий трек
@@ -260,10 +264,11 @@ define(function () { 'use strict';
    	// инициализация событий
    	_initializeEvents: function () {
    		this._player.on('play', this._playView.bind(this));
+   		this._player.on('stop', this._stopView.bind(this));
    		this._player.on('pause', this._pauseView.bind(this));
    		this._player.on('mute', this._muteView.bind(this));
    		this._player.on('unmute', this._unmuteView.bind(this));
-   		//this._player.on('timer', this._timerView.bind(this));
+   		this._player.on('timer', this._timerView.bind(this));
    		//this._player.on('ended', this._endedView.bind(this));
    		//this._player.on('changeSource', this._sourceView.bind(this));
    		//this._player.on('progressCurrentTime', this._progressPlayingView.bind(this));
@@ -272,8 +277,10 @@ define(function () { 'use strict';
    		//this._player.on('hideTimeVolume', this._hideTimeVolumeView.bind(this));
 
 
-   		// вкл / выкл плеера
+   		// вкл. / пауза 
    		this._buttonPlay.addEventListener('click', this._onPlay.bind(this));
+   		// остановка трэка. установка на начало трэка.
+   		this._buttonStop.addEventListener('click', this._onStop.bind(this));
    		// предидущий. трек
    		this._buttonPrev.addEventListener('click', this._onPrev.bind(this));
    		// следующий трек
@@ -287,7 +294,12 @@ define(function () { 'use strict';
    	_playView: function () {
    		this._buttonPlay.className = 'pause';
    	},
-   		
+   	
+   	// показываем кнопку play при остановке воспроизведения трека
+   	_stopView: function () {
+   		this._buttonPlay.className = 'play';
+   	},
+   	
    	// показываем кнопку плэй при остановке плеера
    	_pauseView: function () {
    		this._buttonPlay.className = 'play';
@@ -327,20 +339,20 @@ define(function () { 'use strict';
    	
    	// показываем таймер
    	_timerView: function (event) {
-   		if (event.detail.duration) {
-   			if (this._timer.classList.contains('hide')) {
-   				this._timer.classList.remove('hide');
-   				sliderPlayingContainer.classList.remove('hide');
-   			}
+   		//if (event.detail.duration) {
+   		//	if (this._timer.classList.contains('hide')) {
+   		//		this._timer.classList.remove('hide');
+   		//		sliderPlayingContainer.classList.remove('hide');
+   		//	}
    			this._timer.innerHTML = this._formatTime(event.detail.currentTime) + ' / ' + this._formatTime(event.detail.duration);
-   			if (!this._sliderPlaying.onMouseDown) { // если ползунок проигрывания в бездействии
-   				this._sliderPlaying.move(Math.round(this._sliderPlaying.getMaxValue() * event.detail.currentTime / event.detail.duration));
+   			if (!this._sliderPlaying.sliderActive) { // если ползунок проигрывания в бездействии, то он перемещается по таймеру
+   				this._sliderPlaying.move(Math.round(this._sliderPlaying.getWidthSliderWrapper() * event.detail.currentTime / event.detail.duration));
    			}
-   		} else {
-   			var sliderPlayingContainer = this._sliderPlaying.getContainer();
-   			this._timer.classList.add('hide');
-   			sliderPlayingContainer.classList.add('hide');
-   		}
+   		//} else {
+   		//	var sliderPlayingContainer = this._sliderPlaying.getContainer();
+   		//	this._timer.classList.add('hide');
+   		//	sliderPlayingContainer.classList.add('hide');
+   		//}
    	},
    	
    	// окончание проигрывания.
@@ -363,6 +375,11 @@ define(function () { 'use strict';
    			return;
    		}
    		this._player.pause();
+   	},
+   	
+   	//действие по нажатию кнопки stop
+   	_onStop: function (e) {
+   		this._player.stop();
    	},
    	
    	//действие по нажатию кнопки prev
@@ -403,6 +420,11 @@ define(function () { 'use strict';
    	//отображает плеер внутри указанного элемента
    	renderTo: function (container) {
    		container.appendChild(this._element);
+   		
+   		// прокрутка проигрывания
+   		this._sliderPlaying = new Slider();
+   		this._sliderPlaying.renderTo(this._element.querySelector('.sliderPlaying'));
+
    	}
    };
 

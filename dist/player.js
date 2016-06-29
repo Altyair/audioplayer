@@ -111,7 +111,7 @@ define(function () { 'use strict';
    	// достаточным для того, чтобы успешно начать воспроизведение ролика. Возникает после
    	// события loadeddata и перед событием canplaythrough.
    	this._audio.addEventListener('canplay', this._onCanPlay.bind(this));
-   	//this._audio.addEventListener('timeupdate', this._onTimer.bind(this));
+   	this._audio.addEventListener('timeupdate', this._onTimer.bind(this));
    	//this._audio.addEventListener('ended', this._onEnded.bind(this));
    	
    	CustomEventTarget.call(this); // наследуем свойства от CustomEventTarget
@@ -141,10 +141,10 @@ define(function () { 'use strict';
    Player.prototype.setPlaylist = function (playlist) {
    	this._playlist = new Iterator(playlist);
    	
-   	// первоначально ставится первый трек
-   	//if (this._playlist.hasNext()) {
+   	// первоначально ставится первый трек из плейлиста
+   	if (this._playlist.current()) {
    		this._setSource(this._playlist.current());
-   	//}
+   	}
    };
 
    Player.prototype._setSource = function (source) {
@@ -172,20 +172,27 @@ define(function () { 'use strict';
    	this._audio.pause();
    };
 
+   Player.prototype.stop = function () {
+   	this._fire('stop'); //оповещаем подписчика о завершении воспроизведения (интерфейс)
+   	this._audio.pause();
+   	this._play = false;
+   	// установить указатель текущего трэка на начало 
+   	this._audio.currentTime = '0';
+   };
 
-   // установка предидущего трека -- 04.10.2014
+   // установка предидущего трека
    Player.prototype.prev = function () {
    	if (this._playlist.hasPrev()) {
-   		this._setSource(this._playlist.prev());
    		this._play = true;
+   		this._setSource(this._playlist.prev());
    	}
    };
 
-   // установка следующего трека -- 04.10.2014
+   // установка следующего трека
    Player.prototype.next = function () {
    	if (this._playlist.hasNext()) {
-   		this._setSource(this._playlist.next());
    		this._play = true;
+   		this._setSource(this._playlist.next());
    	}
    };
 
@@ -217,24 +224,24 @@ define(function () { 'use strict';
    	this._audio.muted = false;
    };
 
-   Player.prototype.hideTimePlayingChange = function () {
-   	this._fire('hideTimePlaying');
-   };
+   //Player.prototype.hideTimePlayingChange = function () {
+   //	this._fire('hideTimePlaying');
+   //};
+   //
+   //Player.prototype.hideTimeVolumeChange = function () {
+   //	this._fire('hideTimeVolume');
+   //};
 
-   Player.prototype.hideTimeVolumeChange = function () {
-   	this._fire('hideTimeVolume');
-   };
-
-   Player.prototype.changeVolume = function (newTime, progressMax) {
-   	var volumeValue = 1 / progressMax * newTime;
-   	this._audio.volume = volumeValue;
-   	this._fire('progressVolume', {value: newTime, volumeValue: volumeValue});
-   };
-
-   Player.prototype.changeCurrentTime = function (newTime, progressMax) {
-   	this._audio.currentTime = this._audio.duration / progressMax * newTime;
-   	this._fire('progressCurrentTime', {value: newTime, currentTime: this._audio.currentTime, duration: this.getDuration()});
-   };
+   //Player.prototype.changeVolume = function (newTime, progressMax) {
+   //	var volumeValue = 1 / progressMax * newTime;
+   //	this._audio.volume = volumeValue;
+   //	this._fire('progressVolume', {value: newTime, volumeValue: volumeValue});
+   //};
+   //
+   //Player.prototype.changeCurrentTime = function (newTime, progressMax) {
+   //	this._audio.currentTime = this._audio.duration / progressMax * newTime;
+   //	this._fire('progressCurrentTime', {value: newTime, currentTime: this._audio.currentTime, duration: this.getDuration()});
+   //};
 
    Player.prototype.getDuration = function () {
    	var duration = this._audio.duration;

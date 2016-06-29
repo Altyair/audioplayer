@@ -2,12 +2,10 @@ import CustomEventTarget from './custom-event-target';
 import Template from './template';
 
 function Slider () {
+	this.sliderActive = false;
 	var template = new Template();
 	this._element = this._createDOMElement(template.template(this._template)());
 	this._findElements(); // инициализация элементов
-	this._initializeEvents();
-
-	this.onMouseDown = false; // флаг о начале движения ползунка
 	CustomEventTarget.call(this); // наследуем свойства от CustomEventTarget
 }
 
@@ -19,7 +17,6 @@ Slider.prototype.constructor = Slider;
 Slider.Super = CustomEventTarget; //Super от Super/Parent Class
 
 Slider.prototype._template = [
-	//'<div class="timeInfo"></div>',
 	'<div class="slider"></div>',
 ].join('');
 
@@ -33,27 +30,37 @@ Slider.prototype._createDOMElement = function (obj) {
 Slider.prototype._findElements = function () {
 	var element = this._element;
 	this._slider = element.querySelector('.slider');
-	//this._timeInfo = element.querySelector('.timeInfo');
 };
 
 Slider.prototype.renderTo = function (container) {
-	this._container = container;
 	container.appendChild(this._element);
+	this._sliderWrapper = container.querySelector('.slider-wrapper');
+	this._initializeEvents();
+};
+
+Slider.prototype.getWidthSliderWrapper = function () {
+	return this._sliderWrapper.offsetWidth;
+};
+
+// перемещение извне.
+Slider.prototype.move = function (value) {
+	this._slider.style.left = value + 'px';
 };
 
 // инициализация событий
 Slider.prototype._initializeEvents = function () {
   var slider = this;
-  var coordinatesContainer;
-  var leftCoordinateContainer;
-  var widthSlider;
-  var widthContainer;
-  var centrPositionCursor;
-  var moveAt = function (e) {
+  var coordinatesSliderWrapper = this._getCoordinates(this._sliderWrapper);
+  var leftCoordinateContainer = coordinatesSliderWrapper.left;
+  var widthSliderWrapper = this.getWidthSliderWrapper();
+  var widthSlider = this._slider.offsetWidth;
+  var centrPositionCursor = widthSlider / 2;
+
+  var moveSlider = function (e) {
 	  if (e.pageX <= leftCoordinateContainer + centrPositionCursor) {
 		var value = 0;
-	  } else if(e.pageX >= leftCoordinateContainer + (widthContainer - centrPositionCursor)) {
-		 value = widthContainer - widthSlider;
+	  } else if(e.pageX >= leftCoordinateContainer + (widthSliderWrapper - centrPositionCursor)) {
+		 value = widthSliderWrapper - widthSlider;
 	  } else {
 		 value = e.pageX - leftCoordinateContainer - centrPositionCursor;
 	  }
@@ -63,20 +70,16 @@ Slider.prototype._initializeEvents = function () {
   };
 
   this._slider.addEventListener('mousedown', function (e) {
-	if(!coordinatesContainer) {
-		coordinatesContainer = slider._getCoordinates(slider._container);
-		leftCoordinateContainer = coordinatesContainer.left;
-		widthSlider = slider._slider.offsetWidth;
-		centrPositionCursor = widthSlider / 2;
-		widthContainer = slider._container.offsetWidth;
-	}
+	slider.sliderActive = true;
 	
-	moveAt(e);
-	document.addEventListener('mousemove', moveAt);
+	moveSlider(e);
+	document.addEventListener('mousemove', moveSlider);
   });
  
   document.addEventListener('mouseup', function() {
-	  document.removeEventListener('mousemove', moveAt);
+	  slider._slider.sliderActive = false;
+
+	  document.removeEventListener('mousemove', moveSlider);
   });
  
   this._slider.ondragstart = function() {

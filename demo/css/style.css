@@ -18,12 +18,15 @@ body {
 	position: relative;
 	height: 75px;
 }
-.actions .pause, .play, .stop, .mute, .unmute, .prev, .next {
+.pause, .play, .stop, .mute, .unmute, .prev, .next {
 	height: 42px;
 	width: 42px;
 	position: absolute;
 	bottom: 18px;
 	cursor: pointer;
+}
+.pause:hover, .play:hover, .stop:hover, .mute:hover, .unmute:hover, .prev:hover, .next:hover {
+	opacity: 0.9;
 }
 .actions div.play {
 	left: 10px;
@@ -68,26 +71,14 @@ body {
 	display: none;
 }
 .sliderPlaying, .sliderVolume {
-	height: 2px;
-	background: #fff;
 	position: absolute;
 	left: 190px;
 	top: 35px;
-	width: 200px;
 }
 .sliderVolume {
 	left: 450px;
 	width: 100px;
 }	
-.slider {
-	height: 16px;
-	width: 16px;
-	position: relative;
-	left: 0;
-	top: -7px;
-	background: white;
-	cursor: pointer;
-}
 .timeInfo {
 	width: 40px;
 	position: absolute;

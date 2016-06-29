@@ -34,8 +34,8 @@ PlayerViewController.prototype = {
 	},
 	
 	_formatTime: function (time) {
-		var minutes = Math.floor(time / 60) % 60,
-		seconds = Math.floor(time % 60);
+		var minutes = Math.floor(time / 60) % 60;
+		var seconds = Math.floor(time % 60);
 	   
 		return  (minutes < 10 ? '0' + minutes : minutes) + ':' +
 			(seconds < 10 ? '0' + seconds : seconds);
@@ -45,9 +45,9 @@ PlayerViewController.prototype = {
 	_findElements: function () {
 		var element = this._element;
 		
-		// прокрутка проигрывания
-		var sliderPlaying = new Slider();
-		sliderPlaying.renderTo(element.querySelector('.sliderPlaying'));
+		//// прокрутка проигрывания
+		//this._sliderPlaying = new Slider();
+		//this._sliderPlaying.renderTo(element.querySelector('.sliderPlaying'));
 
 		//
 		//sliderPlaying.on('change', this._onProgressPlayingChange.bind(this));
@@ -73,9 +73,10 @@ PlayerViewController.prototype = {
 		//this._progressVolume  = new Slider();
 		
 		// таймер
-		//this._timer = element.querySelector('.timer');
+		this._timer = element.querySelector('.timer');
 		// кнопка play у каждого интерфейса своя
 		this._buttonPlay = element.querySelector('.play');
+		this._buttonStop = element.querySelector('.stop');
 		// кнопка предидущий трек
 		this._buttonPrev = element.querySelector('.prev');
 		// кнопка следующий трек
@@ -87,10 +88,11 @@ PlayerViewController.prototype = {
 	// инициализация событий
 	_initializeEvents: function () {
 		this._player.on('play', this._playView.bind(this));
+		this._player.on('stop', this._stopView.bind(this));
 		this._player.on('pause', this._pauseView.bind(this));
 		this._player.on('mute', this._muteView.bind(this));
 		this._player.on('unmute', this._unmuteView.bind(this));
-		//this._player.on('timer', this._timerView.bind(this));
+		this._player.on('timer', this._timerView.bind(this));
 		//this._player.on('ended', this._endedView.bind(this));
 		//this._player.on('changeSource', this._sourceView.bind(this));
 		//this._player.on('progressCurrentTime', this._progressPlayingView.bind(this));
@@ -99,8 +101,10 @@ PlayerViewController.prototype = {
 		//this._player.on('hideTimeVolume', this._hideTimeVolumeView.bind(this));
 
 
-		// вкл / выкл плеера
+		// вкл. / пауза 
 		this._buttonPlay.addEventListener('click', this._onPlay.bind(this));
+		// остановка трэка. установка на начало трэка.
+		this._buttonStop.addEventListener('click', this._onStop.bind(this));
 		// предидущий. трек
 		this._buttonPrev.addEventListener('click', this._onPrev.bind(this));
 		// следующий трек
@@ -114,7 +118,12 @@ PlayerViewController.prototype = {
 	_playView: function () {
 		this._buttonPlay.className = 'pause';
 	},
-		
+	
+	// показываем кнопку play при остановке воспроизведения трека
+	_stopView: function () {
+		this._buttonPlay.className = 'play';
+	},
+	
 	// показываем кнопку плэй при остановке плеера
 	_pauseView: function () {
 		this._buttonPlay.className = 'play';
@@ -154,20 +163,20 @@ PlayerViewController.prototype = {
 	
 	// показываем таймер
 	_timerView: function (event) {
-		if (event.detail.duration) {
-			if (this._timer.classList.contains('hide')) {
-				this._timer.classList.remove('hide');
-				sliderPlayingContainer.classList.remove('hide');
-			}
+		//if (event.detail.duration) {
+		//	if (this._timer.classList.contains('hide')) {
+		//		this._timer.classList.remove('hide');
+		//		sliderPlayingContainer.classList.remove('hide');
+		//	}
 			this._timer.innerHTML = this._formatTime(event.detail.currentTime) + ' / ' + this._formatTime(event.detail.duration);
-			if (!this._sliderPlaying.onMouseDown) { // если ползунок проигрывания в бездействии
-				this._sliderPlaying.move(Math.round(this._sliderPlaying.getMaxValue() * event.detail.currentTime / event.detail.duration));
+			if (!this._sliderPlaying.sliderActive) { // если ползунок проигрывания в бездействии, то он перемещается по таймеру
+				this._sliderPlaying.move(Math.round(this._sliderPlaying.getWidthSliderWrapper() * event.detail.currentTime / event.detail.duration));
 			}
-		} else {
-			var sliderPlayingContainer = this._sliderPlaying.getContainer();
-			this._timer.classList.add('hide');
-			sliderPlayingContainer.classList.add('hide');
-		}
+		//} else {
+		//	var sliderPlayingContainer = this._sliderPlaying.getContainer();
+		//	this._timer.classList.add('hide');
+		//	sliderPlayingContainer.classList.add('hide');
+		//}
 	},
 	
 	// окончание проигрывания.
@@ -190,6 +199,11 @@ PlayerViewController.prototype = {
 			return;
 		}
 		this._player.pause();
+	},
+	
+	//действие по нажатию кнопки stop
+	_onStop: function (e) {
+		this._player.stop();
 	},
 	
 	//действие по нажатию кнопки prev
@@ -230,6 +244,11 @@ PlayerViewController.prototype = {
 	//отображает плеер внутри указанного элемента
 	renderTo: function (container) {
 		container.appendChild(this._element);
+		
+		// прокрутка проигрывания
+		this._sliderPlaying = new Slider();
+		this._sliderPlaying.renderTo(this._element.querySelector('.sliderPlaying'));
+
 	}
 };
 
