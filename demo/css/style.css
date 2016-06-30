@@ -58,7 +58,7 @@ body {
 .timer {
 	color: #fff;
 	position: absolute;
-	left: 75px;
+	left: 10px;
 	top: 12px;
 	display: block;
 }
@@ -70,12 +70,12 @@ body {
 .hide {
 	display: none;
 }
-.sliderPlaying, .sliderVolume {
+.slider-playing, .slider-volume {
 	position: absolute;
 	left: 190px;
 	top: 35px;
 }
-.sliderVolume {
+.slider-volume {
 	left: 450px;
 	width: 100px;
 }	

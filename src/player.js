@@ -123,24 +123,15 @@ Player.prototype.unmute = function () {
 	this._audio.muted = false;
 };
 
-//Player.prototype.hideTimePlayingChange = function () {
-//	this._fire('hideTimePlaying');
-//};
-//
-//Player.prototype.hideTimeVolumeChange = function () {
-//	this._fire('hideTimeVolume');
-//};
+Player.prototype.setCurrentTime = function (value) {
+	this._audio.currentTime = value;
+};
 
-//Player.prototype.changeVolume = function (newTime, progressMax) {
-//	var volumeValue = 1 / progressMax * newTime;
-//	this._audio.volume = volumeValue;
-//	this._fire('progressVolume', {value: newTime, volumeValue: volumeValue});
-//};
-//
-//Player.prototype.changeCurrentTime = function (newTime, progressMax) {
-//	this._audio.currentTime = this._audio.duration / progressMax * newTime;
-//	this._fire('progressCurrentTime', {value: newTime, currentTime: this._audio.currentTime, duration: this.getDuration()});
-//};
+Player.prototype.setVolume = function (value) {
+	this._audio.volume = value;
+	
+	this._fire('changeVolume',  {value: value, maxValue: 1});
+};
 
 Player.prototype.getDuration = function () {
 	var duration = this._audio.duration;

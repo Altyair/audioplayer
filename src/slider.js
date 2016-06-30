@@ -2,7 +2,7 @@ import CustomEventTarget from './custom-event-target';
 import Template from './template';
 
 function Slider () {
-	this.sliderActive = false;
+	this._sliderActive = false;
 	var template = new Template();
 	this._element = this._createDOMElement(template.template(this._template)());
 	this._findElements(); // инициализация элементов
@@ -34,12 +34,12 @@ Slider.prototype._findElements = function () {
 
 Slider.prototype.renderTo = function (container) {
 	container.appendChild(this._element);
-	this._sliderWrapper = container.querySelector('.slider-wrapper');
+	this._sliderContainer = container;
 	this._initializeEvents();
 };
 
-Slider.prototype.getWidthSliderWrapper = function () {
-	return this._sliderWrapper.offsetWidth;
+Slider.prototype.getWidthSliderContainer = function () {
+	return this._sliderContainer.offsetWidth - this._slider.offsetWidth;
 };
 
 // перемещение извне.
@@ -47,37 +47,41 @@ Slider.prototype.move = function (value) {
 	this._slider.style.left = value + 'px';
 };
 
+Slider.prototype.getSliderActiveFlag = function () {
+	return this._sliderActive;
+};
+
 // инициализация событий
 Slider.prototype._initializeEvents = function () {
   var slider = this;
-  var coordinatesSliderWrapper = this._getCoordinates(this._sliderWrapper);
-  var leftCoordinateContainer = coordinatesSliderWrapper.left;
-  var widthSliderWrapper = this.getWidthSliderWrapper();
+  var coordinatesSliderContainer = this._getCoordinates(this._sliderContainer);
+  var leftCoordinateContainer = coordinatesSliderContainer.left;
+  var widthSliderContainer = this.getWidthSliderContainer();
   var widthSlider = this._slider.offsetWidth;
   var centrPositionCursor = widthSlider / 2;
 
   var moveSlider = function (e) {
 	  if (e.pageX <= leftCoordinateContainer + centrPositionCursor) {
 		var value = 0;
-	  } else if(e.pageX >= leftCoordinateContainer + (widthSliderWrapper - centrPositionCursor)) {
-		 value = widthSliderWrapper - widthSlider;
+	  } else if(e.pageX >= leftCoordinateContainer + widthSliderContainer + centrPositionCursor) {
+		 value = widthSliderContainer;
 	  } else {
 		 value = e.pageX - leftCoordinateContainer - centrPositionCursor;
 	  }
 	  slider._slider.style.left = value + 'px';
 	  
-	  //this._fire('change', {value: value, progressMax: this._progressMaxValue});
+	  slider._fire('changeSlider', {value: value, maxValue: widthSliderContainer});
   };
 
   this._slider.addEventListener('mousedown', function (e) {
-	slider.sliderActive = true;
+	slider._sliderActive = true;
 	
 	moveSlider(e);
 	document.addEventListener('mousemove', moveSlider);
   });
  
   document.addEventListener('mouseup', function() {
-	  slider._slider.sliderActive = false;
+	  slider._sliderActive = false;
 
 	  document.removeEventListener('mousemove', moveSlider);
   });

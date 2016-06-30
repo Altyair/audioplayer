@@ -82,7 +82,7 @@ define(function () { 'use strict';
    }
 
    function Slider () {
-   	this.sliderActive = false;
+   	this._sliderActive = false;
    	var template = new Template();
    	this._element = this._createDOMElement(template.template(this._template)());
    	this._findElements(); // инициализация элементов
@@ -114,12 +114,12 @@ define(function () { 'use strict';
 
    Slider.prototype.renderTo = function (container) {
    	container.appendChild(this._element);
-   	this._sliderWrapper = container.querySelector('.slider-wrapper');
+   	this._sliderContainer = container;
    	this._initializeEvents();
    };
 
-   Slider.prototype.getWidthSliderWrapper = function () {
-   	return this._sliderWrapper.offsetWidth;
+   Slider.prototype.getWidthSliderContainer = function () {
+   	return this._sliderContainer.offsetWidth - this._slider.offsetWidth;
    };
 
    // перемещение извне.
@@ -127,37 +127,41 @@ define(function () { 'use strict';
    	this._slider.style.left = value + 'px';
    };
 
+   Slider.prototype.getSliderActiveFlag = function () {
+   	return this._sliderActive;
+   };
+
    // инициализация событий
    Slider.prototype._initializeEvents = function () {
      var slider = this;
-     var coordinatesSliderWrapper = this._getCoordinates(this._sliderWrapper);
-     var leftCoordinateContainer = coordinatesSliderWrapper.left;
-     var widthSliderWrapper = this.getWidthSliderWrapper();
+     var coordinatesSliderContainer = this._getCoordinates(this._sliderContainer);
+     var leftCoordinateContainer = coordinatesSliderContainer.left;
+     var widthSliderContainer = this.getWidthSliderContainer();
      var widthSlider = this._slider.offsetWidth;
      var centrPositionCursor = widthSlider / 2;
 
      var moveSlider = function (e) {
    	  if (e.pageX <= leftCoordinateContainer + centrPositionCursor) {
    		var value = 0;
-   	  } else if(e.pageX >= leftCoordinateContainer + (widthSliderWrapper - centrPositionCursor)) {
-   		 value = widthSliderWrapper - widthSlider;
+   	  } else if(e.pageX >= leftCoordinateContainer + widthSliderContainer + centrPositionCursor) {
+   		 value = widthSliderContainer;
    	  } else {
    		 value = e.pageX - leftCoordinateContainer - centrPositionCursor;
    	  }
    	  slider._slider.style.left = value + 'px';
    	  
-   	  //this._fire('change', {value: value, progressMax: this._progressMaxValue});
+   	  slider._fire('changeSlider', {value: value, maxValue: widthSliderContainer});
      };
 
      this._slider.addEventListener('mousedown', function (e) {
-   	slider.sliderActive = true;
+   	slider._sliderActive = true;
    	
    	moveSlider(e);
    	document.addEventListener('mousemove', moveSlider);
      });
     
      document.addEventListener('mouseup', function() {
-   	  slider._slider.sliderActive = false;
+   	  slider._sliderActive = false;
 
    	  document.removeEventListener('mousemove', moveSlider);
      });
@@ -196,9 +200,9 @@ define(function () { 'use strict';
    			'<div class="stop"></div>',
    			'<div class="prev"></div>',
    			'<div class="next"></div>',
-   			'<div class="sliderPlaying"></div>',
+   			'<div class="slider-playing"></div>',
    			'<div class="mute"></div>',
-   			'<div class="sliderVolume"></div>',
+   			'<div class="slider-volume"></div>',
    		'</div>',
    		'</div>'
    	].join(''),
@@ -221,32 +225,8 @@ define(function () { 'use strict';
    	_findElements: function () {
    		var element = this._element;
    		
-   		//// прокрутка проигрывания
-   		//this._sliderPlaying = new Slider();
-   		//this._sliderPlaying.renderTo(element.querySelector('.sliderPlaying'));
-
-   		//
-   		//sliderPlaying.on('change', this._onProgressPlayingChange.bind(this));
-   		//sliderPlaying.on('hideTime', this._onHideTimePlayingChange.bind(this));
-   		//
-   		//this._sliderPlaying = sliderPlaying;
-   		
-   		// прокрутка громкости
-   		//var sliderVolume = new Slider();
-   		//sliderVolume.setMaxValue(130);
-   		//sliderVolume.setContainer(element.querySelector('.sliderVolume'));
-   		//sliderVolume.render();
-   		//
-   		//sliderVolume.on('change', this._onProgressVolumeChange.bind(this));
-   		//sliderVolume.on('hideTime', this._onHideTimeVolumeChange.bind(this));
-   		//
-   		//this._sliderVolume = sliderVolume;
-   		
    		// название трека
    		this._nameField = element.querySelector('.name');
-   		
-   		// полоса прогресса громкости
-   		//this._progressVolume  = new Slider();
    		
    		// таймер
    		this._timer = element.querySelector('.timer');
@@ -259,6 +239,10 @@ define(function () { 'use strict';
    		this._buttonNext = element.querySelector('.next');
    		// кнопка вкл / выкл звука
    		this._buttonMute = element.querySelector('.mute');
+   		// сладер проигрывания
+   		this._sliderPlaying = new Slider();
+   		// сладер громкости
+   		this._sliderVolume = new Slider();
    	},
    	
    	// инициализация событий
@@ -268,14 +252,14 @@ define(function () { 'use strict';
    		this._player.on('pause', this._pauseView.bind(this));
    		this._player.on('mute', this._muteView.bind(this));
    		this._player.on('unmute', this._unmuteView.bind(this));
-   		this._player.on('timer', this._timerView.bind(this));
+   		this._player.on('timer', this._progressPlayingView.bind(this));
+   		this._player.on('changeVolume', this._progressVolumeView.bind(this));
+   		
+   		this._sliderPlaying.on('changeSlider', this._onSliderPlayingChange.bind(this));
+   		this._sliderVolume.on('changeSlider', this._onSliderVolumeChange.bind(this));
+   		
    		//this._player.on('ended', this._endedView.bind(this));
    		//this._player.on('changeSource', this._sourceView.bind(this));
-   		//this._player.on('progressCurrentTime', this._progressPlayingView.bind(this));
-   		//this._player.on('progressVolume', this._progressVolumeView.bind(this));
-   		//this._player.on('hideTimePlaying', this._hideTimePlayingView.bind(this));
-   		//this._player.on('hideTimeVolume', this._hideTimeVolumeView.bind(this));
-
 
    		// вкл. / пауза 
    		this._buttonPlay.addEventListener('click', this._onPlay.bind(this));
@@ -288,6 +272,11 @@ define(function () { 'use strict';
    		// вкл / выкл звука
    		this._buttonMute.addEventListener('click', this._onMute.bind(this));
    		
+   	},
+   	
+   	// показываем кнопку пауза при проигывании плеера
+   	_progressVolumeView: function (event) {
+   		this._sliderVolume.move(Math.round(this._sliderVolume.getWidthSliderContainer() * event.detail.value / event.detail.maxValue));
    	},
    	
    	// показываем кнопку пауза при проигывании плеера
@@ -315,44 +304,12 @@ define(function () { 'use strict';
    		this._buttonMute.className = 'mute';
    	},
    	
-   	// показываем движение ползунка.
-   	_progressPlayingView: function (event) {
-   		this._sliderPlaying.move(event.detail.value); // перемещаем ползунок
-   		this._sliderPlaying.showTime(event.detail.value, this._formatTime(event.detail.currentTime)); // показываем всплывающее время
-   	},
-   	// показываем движение ползунка.
-   	_hideTimePlayingView: function (event) {
-   		this._sliderPlaying.hideTime();
-   	},
-   	
-   	// показываем движение ползунка.
-   	_hideTimeVolumeView: function (event) {
-   		this._sliderVolume.hideTime();
-   	},
-   	
-   	// показываем движение ползунка.
-   	_progressVolumeView: function (event) {
-   		this._sliderVolume.move(event.detail.value);
-   		
-   		this._sliderVolume.showTime(event.detail.value, Math.ceil(event.detail.volumeValue * 10)); // показываем всплывающее время
-   	},
-   	
    	// показываем таймер
-   	_timerView: function (event) {
-   		//if (event.detail.duration) {
-   		//	if (this._timer.classList.contains('hide')) {
-   		//		this._timer.classList.remove('hide');
-   		//		sliderPlayingContainer.classList.remove('hide');
-   		//	}
-   			this._timer.innerHTML = this._formatTime(event.detail.currentTime) + ' / ' + this._formatTime(event.detail.duration);
-   			if (!this._sliderPlaying.sliderActive) { // если ползунок проигрывания в бездействии, то он перемещается по таймеру
-   				this._sliderPlaying.move(Math.round(this._sliderPlaying.getWidthSliderWrapper() * event.detail.currentTime / event.detail.duration));
-   			}
-   		//} else {
-   		//	var sliderPlayingContainer = this._sliderPlaying.getContainer();
-   		//	this._timer.classList.add('hide');
-   		//	sliderPlayingContainer.classList.add('hide');
-   		//}
+   	_progressPlayingView: function (event) {
+   		this._timer.innerHTML = this._formatTime(event.detail.currentTime) + ' / ' + this._formatTime(event.detail.duration);
+   		if (!this._sliderPlaying.getSliderActiveFlag()) { // если ползунок проигрывания не передвигается юзером, то он перемещается по таймеру пдеера
+   			this._sliderPlaying.move(Math.round(this._sliderPlaying.getWidthSliderContainer() * event.detail.currentTime / event.detail.duration));
+   		}
    	},
    	
    	// окончание проигрывания.
@@ -366,6 +323,17 @@ define(function () { 'use strict';
    	_sourceView: function (event) {
    		var pathName = event.detail.source.split('/');
    		this._nameField.innerHTML = pathName[pathName.length - 1];
+   	},
+   	
+   	//////////////////////////////
+   	_onSliderPlayingChange: function (event) {
+   		var value = this._player.getDuration() / event.detail.maxValue * event.detail.value;
+   		this._player.setCurrentTime(value);  
+   	},
+   	
+   	_onSliderVolumeChange: function (event) {
+   		var value = 1 / event.detail.maxValue * event.detail.value;
+   		this._player.setVolume(value);  
    	},
    	
    	//действие по нажатию кнопки play / pause
@@ -401,30 +369,13 @@ define(function () { 'use strict';
    		this._player.mute();
    	},
    	
-   	_onHideTimePlayingChange: function () {
-   		this._player.hideTimePlayingChange();  
-   	},
-   	
-   	_onHideTimeVolumeChange: function () {
-   		this._player.hideTimeVolumeChange();  
-   	},
-   	
-   	_onProgressPlayingChange: function (event) {
-   		this._player.changeCurrentTime(event.detail.value, event.detail.progressMax);  
-   	},
-   	
-   	_onProgressVolumeChange: function (event) {
-   		this._player.changeVolume(event.detail.value, event.detail.progressMax);  
-   	},
-   	
    	//отображает плеер внутри указанного элемента
    	renderTo: function (container) {
    		container.appendChild(this._element);
    		
    		// прокрутка проигрывания
-   		this._sliderPlaying = new Slider();
-   		this._sliderPlaying.renderTo(this._element.querySelector('.sliderPlaying'));
-
+   		this._sliderPlaying.renderTo(this._element.querySelector('.slider-playing'));
+   		this._sliderVolume.renderTo(this._element.querySelector('.slider-volume'));
    	}
    };
 
